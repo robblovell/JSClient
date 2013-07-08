@@ -1,10 +1,9 @@
-var Mojio = {
-    Client: null
-};
-
 (function ($) {
-    Mojio.Sandbox = "http://sandbox.developer.moj.io/v1";
-    Mojio.Live = "http://developer.moj.io/v1";
+    Mojio = {
+        Sandbox: "http://sandbox.developer.moj.io/v1",
+        Live: "http://developer.moj.io/v1",
+        Client: null
+    };
 
     Mojio.Client = function (options) {
         var settings;
@@ -624,6 +623,14 @@ var Mojio = {
         }
 
         return public;
+    }
+    }
+
+    if (typeof exports !== 'undefined') {
+        // Github = exports;
+        module.exports = Mojio;
+    } else {
+        window.Mojio = Mojio;
     }
 })(jQuery);
 
