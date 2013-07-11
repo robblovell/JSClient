@@ -1,0 +1,40 @@
+<html>
+    <head>
+        <title>Mojio Client Test</title>
+    </head>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js" ></script>
+    <script src="../mojio.client.js"></script>
+    <script type="text/javascript">
+        var testBegin = function () {
+            eval($('#settings').val());
+
+            client = new Mojio.Client(settings);
+
+            testOnLogin(client);
+            testOnLogout(client);
+        }
+
+        var testOnLogin = function(client)
+        {
+            client.onLogin(function(){
+                alert('login');
+            });
+        }
+
+        var testOnLogout = function (client) {
+            client.onLogout(function () {
+                alert('logout');
+            });
+        }
+    </script>
+    <body>
+        <textarea id="settings" cols="60" rows="8">
+var settings = {
+    url: Mojio.Sandbox, // or Mojio.Live 
+    appId: "1B7AFF8B-6C2C-4845-85B0-D21DD6267CF1",
+    secretKey: "c78207b8-997f-44fb-923b-005f050336ad"
+}
+        </textarea>
+        <input type="button" onclick="testBegin()" value="Test Run" />
+    </body>
+</html>

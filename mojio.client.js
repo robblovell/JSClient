@@ -6,6 +6,7 @@
     };
 
     Mojio.Client = function (options) {
+        var _this = this;
         var settings;
         var _token;
 
@@ -26,18 +27,23 @@
 
         var init = function (options) {
             settings = $.extend({
-                'url': 'http://api.moj.io/v1',
-                'mojioTokenHeader': "MojioAPIToken",
-                'cookiePrefix': 'MojioTokenCookie',
-                'cookieDomain': document.domain,
-                'allowLocalStorage': true,
-                'cacheEnabled': true,
-                'cachePrefix': 'MojioCache',
-                'cacheMax': 25,
-                'keepAlive': 6,
-                'sessionTime': 24 * 60
+                'url': 'http://api.moj.io/v1',       // API endpoint
+                'mojioTokenHeader': "MojioAPIToken", // Header name for Mojio Token
+                'saveSession': false,                // Should session information be stored?
+                'cookiePrefix': 'MojioTokenCookie',  // Session cookie name (if we are saving session state)
+                'cookieDomain': document.domain,     // Session domain (if we are saving session state)
+                'allowLocalStorage': true,           // Allow use of local storage for session and cache?
+                'cacheEnabled': true,                // Enable caching of queries?
+                'cachePrefix': 'MojioCache',         // Cache prefix
+                'cacheMax': 25,                      // Max number of requests to store
+                'keepAlive': 6,                      // Session keep alive in minutes (Should be less THAN sessionTime)
+                'sessionTime': 24 * 60,              // Length of login session token keep alive
+                'debug': false                       // Verbose debugging (to console.log)
             }, options);
 
+            if (settings.debug && !console)
+                // Silently disable logging?
+                settings.debug = false;
 
             if (settings.cacheEnabled && typeof (Storage) == "undefined") {
                 // Fallback incase no browser does not support LocalStorage.
@@ -53,17 +59,14 @@
             _loadCached();
 
             if (settings.token) {
-                loginRequest = true;
-                $(function () {
-                    loginRequest = sendRequest(getUrl("login", settings.token))
-                        .done(function (data) {
-                            setToken(data);
+                loginRequest = sendRequest(getUrl("login", settings.token))
+                    .done(function (data) {
+                        setToken(data);
 
-                            if (loginRequest == this)
-                                loginRequest = null;
-                        })
-                        .fail(function () { $.error('Failed to initialize API.'); });
-                });
+                        if (loginRequest == this)
+                            loginRequest = null;
+                    })
+                    .fail(function () { $.error('Failed to initialize API.'); });
             } else {
                 _loadSessionToken();
                 if (getTokenId())
@@ -79,18 +82,20 @@
                     data["password"] = options.password;
                 }
 
-                loginRequest = true;
-                $(function () {
-                    loginRequest = sendRequest(getUrl("login", settings.appId, "begin"), data)
-                    .done(function (data) {
-                        setToken(data);
+                loginRequest = sendRequest(getUrl("login", settings.appId, "begin"), data)
+                .done(function (data) {
+                    setToken(data);
 
-                        if (loginRequest == this)
-                            loginRequest = null;
-                    })
-                    .fail(function () { $.error('Failed to initialize API.'); });
-                });
+                    if (loginRequest == this)
+                        loginRequest = null;
+                })
+                .fail(function () { $.error('Failed to initialize API.'); });
             }
+        }
+
+        var log = function (object) {
+            if (settings.debug)
+                console.log(object);
         }
 
         var parseDate = function (str) {
@@ -108,17 +113,22 @@
             if (!id)
                 id = _token._id;
 
-            loginRequest = sendRequest(getUrl("login", id, "extend"), settings.keepAlive, "PUT")
+            loginRequest = sendRequest(getUrl("login", id, "extend"), { 'minutes': settings.keepAlive }, "GET")
                     .done(function (data) {
                         setToken(data);
 
                         if (loginRequest == this)
                             loginRequest = null;
                     })
-                    .fail(function () { setCookie(settings.cookiePrefix + "_id", null, new Date(0), settings.cookieDomain); });
+                    .fail(function () {
+                        log("Failed to login");
+                        setCookie(settings.cookiePrefix + "_id", null, new Date(0), settings.cookieDomain);
+                    });
         }
 
         var _loadSessionToken = function () {
+            if (!settings.saveSession) return;
+
             // Load token from cookie instead
             var tokenId = getCookie(settings.cookiePrefix + "_id");
             if (tokenId) {
@@ -134,6 +144,8 @@
         }
 
         var _saveSessionToken = function (token) {
+            if (!settings.saveSession) return;
+
             if (_logoutTimer) clearTimeout(_logoutTimer);
             _logoutTimer = setTimeout(_refreshToken, (settings.keepAlive - 1) * 60 * 1000);
 
@@ -146,7 +158,7 @@
             else
                 setCookie(settings.cookiePrefix + "_user", null, new Date(0), settings.cookieDomain);
 
-            setCookie(settings.cookiePrefix + "_refresh", expires, settings.cookieDomain);
+            setCookie(settings.cookiePrefix + "_refresh", expires, expires, settings.cookieDomain);
 
             if (!_token || _token._id != token._id)
                 setCookie(settings.cookiePrefix + "_id", token._id, date, settings.cookieDomain);
@@ -235,9 +247,9 @@
 
             // Update event status
             if (isLoggedIn() && !currentStatus)
-                $.event.trigger('mojioLogin');
+                $(_this).trigger('mojioLogin');
             else if (!isLoggedIn() /*&& currentStatus*/)
-                $.event.trigger('mojioLogout');
+                $(_this).trigger('mojioLogout');
 
             // Clear saved user if user has changed.
             if (_user && _user._id != getUserId())
@@ -303,7 +315,7 @@
                 type: method,
                 cache: false,
                 error: function (obj, status, error) {
-                    //console.log('Error during request: (' + status + ') ' + error);
+                    log('Error during request: (' + status + ') ' + error);
                 }
             });
         }
@@ -322,7 +334,7 @@
                         loginRequest = null;
                 })
                 .fail(function () {
-                    //console.log('Failed to login.'); 
+                    log('Failed to login');
                 });
 
             return loginRequest;
@@ -337,7 +349,7 @@
                         loginRequest = null;
                 })
                 .fail(function () {
-                    //console.log('Failed to logout.'); 
+                    log('Logout failed');
                 });
 
             return loginRequest;
@@ -505,10 +517,7 @@
             _hub = _conn.createHubProxy('hub');
 
             _hub.on("error", function (data) {
-                // TODO: error logging?
-                if (console)
-                    console.log(data);
-                $.error("Error received");
+                log(data);
             });
 
             _connStatus = _conn.start().done(function () { _connStatus = null; });
@@ -596,7 +605,7 @@
                     // IF already logged in, exec function
                     func();
 
-                $(document).bind('mojioLogin', func);
+                $(_this).bind('mojioLogin', func);
                 return this;
             },
             onLogout: function (func) {
@@ -604,17 +613,19 @@
                     // IF already logged out, exec function
                     func();
 
-                $(document).bind('mojioLogout', func);
+                $(_this).bind('mojioLogout', func);
                 return this;
             },
             onEvent: function (func) {
                 getHub().on("event", func);
             },
             ready: function (func) {
-                if (loginRequest == null)
-                    func();
-                else
-                    loginRequest.done(func);
+                $(function () {
+                    if (loginRequest == null)
+                        func();
+                    else
+                        loginRequest.done(func);
+                });
 
                 return this;
             },
@@ -623,7 +634,6 @@
         }
 
         return public;
-    }
     }
 
     if (typeof exports !== 'undefined') {
