@@ -32,7 +32,6 @@
                 'saveSession': false,                // Should session information be stored?
                 'cookiePrefix': 'MojioTokenCookie',  // Session cookie name (if we are saving session state)
                 'cookieDomain': document.domain,     // Session domain (if we are saving session state)
-                'allowLocalStorage': true,           // Allow use of local storage for session and cache?
                 'cacheEnabled': true,                // Enable caching of queries?
                 'cachePrefix': 'MojioCache',         // Cache prefix
                 'cacheMax': 25,                      // Max number of requests to store
@@ -115,13 +114,14 @@
 
             loginRequest = sendRequest(getUrl("login", id, "extend"), { 'minutes': settings.keepAlive }, "GET")
                     .done(function (data) {
+                        log('Session token has been refreshed.');
                         setToken(data);
 
                         if (loginRequest == this)
                             loginRequest = null;
                     })
                     .fail(function () {
-                        log("Failed to login");
+                        log("Failed to refresh token.");
                         setCookie(settings.cookiePrefix + "_id", null, new Date(0), settings.cookieDomain);
                     });
         }
@@ -132,14 +132,17 @@
             // Load token from cookie instead
             var tokenId = getCookie(settings.cookiePrefix + "_id");
             if (tokenId) {
-                if (getCookie(settings.cookiePrefix + "_refresh") > new Date().getTime())
+                if (getCookie(settings.cookiePrefix + "_refresh") > new Date().getTime()) {
+                    log('Loading token from previous session');
                     _token = {
                         _id: tokenId,
                         AppId: settings.appId,
                         UserId: getCookie(settings.cookiePrefix + "_user")
                     }
-                else
+                } else {
+                    log('Previous session has expired.');
                     _clearCached();
+                }
             }
         }
 
@@ -189,6 +192,7 @@
                 if (!match || prop.indexOf(match) !== -1)
                     _removeCached(prop, true);
 
+            log(match + ' cache cleared');
             _updateCached();
         }
 
