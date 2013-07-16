@@ -259,9 +259,9 @@
 
             // Update event status
             if (isLoggedIn() && !currentStatus)
-                $.event.trigger('mojioLogin');
+                $(_this).trigger('mojioLogin');
             else if (!isLoggedIn() /*&& currentStatus*/)
-                $.event.trigger('mojioLogout');
+                $(_this).trigger('mojioLogout');
 
             // Clear saved user if user has changed.
             if (_user && _user._id != getUserId())
@@ -620,7 +620,7 @@
                 console.log('registering');
                 console.log(loginRequest);
 
-                $(document).bind('mojioLogin', func);
+                $(_this).bind('mojioLogin', func);
                 return public;
             },
             onLogout: function (func) {
@@ -628,7 +628,7 @@
                     // IF already logged out, exec function
                     func();
 
-                $(document).bind('mojioLogout', func);
+                $(_this).bind('mojioLogout', func);
                 return public;
             },
             onEvent: function (func) {
