@@ -503,9 +503,9 @@
 
             if (hub.connection.state != 1) {
                 if (_connStatus)
-                    _connStatus.done(function () { subscribe(type, ids, groups) });
+                    _connStatus.done(function () { unsubscribe(type, ids, groups) });
                 else
-                    _connStatus = hub.connection.start().done(function () { subscribe(type, ids, groups) });
+                    _connStatus = hub.connection.start().done(function () { unsubscribe(type, ids, groups) });
 
                 return _connStatus;
             }
