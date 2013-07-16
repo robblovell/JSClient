@@ -60,10 +60,12 @@
             if (settings.token) {
                 loginRequest = sendRequest(getUrl("login", settings.token))
                     .done(function (data) {
-                        setToken(data);
+                        $(function () {
+                            setToken(data);
 
-                        if (loginRequest == this)
-                            loginRequest = null;
+                            if (loginRequest == this)
+                                loginRequest = null;
+                        });
                     })
                     .fail(function () { $.error('Failed to initialize API.'); });
             } else {
@@ -83,10 +85,12 @@
 
                 loginRequest = sendRequest(getUrl("login", settings.appId, "begin"), data)
                 .done(function (data) {
-                    setToken(data);
+                    $(function () {
+                        setToken(data);
 
-                    if (loginRequest == this)
-                        loginRequest = null;
+                        if (loginRequest == this)
+                            loginRequest = null;
+                    });
                 })
                 .fail(function () { $.error('Failed to initialize API.'); });
             }
@@ -114,11 +118,13 @@
 
             loginRequest = sendRequest(getUrl("login", id, "extend"), { 'minutes': settings.keepAlive }, "GET")
                     .done(function (data) {
-                        log('Session token has been refreshed.');
-                        setToken(data);
+                        $(function () {
+                            log('Session token has been refreshed.');
+                            setToken(data);
 
-                        if (loginRequest == this)
-                            loginRequest = null;
+                            if (loginRequest == this)
+                                loginRequest = null;
+                        });
                     })
                     .fail(function () {
                         log("Failed to refresh token.");
@@ -249,11 +255,13 @@
             _saveSessionToken(token);
             _token = token;
 
+            console.log('setting token');
+
             // Update event status
             if (isLoggedIn() && !currentStatus)
-                $(_this).trigger('mojioLogin');
+                $.event.trigger('mojioLogin');
             else if (!isLoggedIn() /*&& currentStatus*/)
-                $(_this).trigger('mojioLogout');
+                $.event.trigger('mojioLogout');
 
             // Clear saved user if user has changed.
             if (_user && _user._id != getUserId())
@@ -609,29 +617,32 @@
                     // IF already logged in, exec function
                     func();
 
-                $(_this).bind('mojioLogin', func);
-                return this;
+                console.log('registering');
+                console.log(loginRequest);
+
+                $(document).bind('mojioLogin', func);
+                return public;
             },
             onLogout: function (func) {
                 if (!isLoggedIn() && !loginRequest)
                     // IF already logged out, exec function
                     func();
 
-                $(_this).bind('mojioLogout', func);
-                return this;
+                $(document).bind('mojioLogout', func);
+                return public;
             },
             onEvent: function (func) {
                 getHub().on("event", func);
             },
             ready: function (func) {
                 $(function () {
-                    if (loginRequest == null)
+                    if (!loginRequest)
                         func();
                     else
                         loginRequest.done(func);
                 });
 
-                return this;
+                return public;
             },
             dataTableHandler: dataTableHandler,
             dataTableRenderDate: dataTableRenderDate
