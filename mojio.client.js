@@ -58,15 +58,7 @@
             _loadCached();
 
             if (settings.token) {
-                loginRequest = sendRequest(getUrl("login", settings.token))
-                    .done(function (data) {
-                        $(function () {
-                            setToken(data);
-
-                            if (loginRequest == this)
-                                loginRequest = null;
-                        });
-                    })
+                _sendLoginRequest(getUrl("login", settings.token))
                     .fail(function () { $.error('Failed to initialize API.'); });
             } else {
                 _loadSessionToken();
@@ -83,15 +75,7 @@
                     data["password"] = options.password;
                 }
 
-                loginRequest = sendRequest(getUrl("login", settings.appId, "begin"), data)
-                .done(function (data) {
-                    $(function () {
-                        setToken(data);
-
-                        if (loginRequest == this)
-                            loginRequest = null;
-                    });
-                })
+                _sendLoginRequest(getUrl("login", settings.appId, "begin"), data)
                 .fail(function () { $.error('Failed to initialize API.'); });
             }
         }
@@ -116,15 +100,9 @@
             if (!id)
                 id = _token._id;
 
-            loginRequest = sendRequest(getUrl("login", id, "extend"), { 'minutes': settings.keepAlive }, "GET")
+            _sendLoginRequest(getUrl("login", id, "extend"), { 'minutes': settings.keepAlive }, "GET")
                     .done(function (data) {
-                        $(function () {
-                            log('Session token has been refreshed.');
-                            setToken(data);
-
-                            if (loginRequest == this)
-                                loginRequest = null;
-                        });
+                        log('Session token has been refreshed.');
                     })
                     .fail(function () {
                         log("Failed to refresh token.");
@@ -255,8 +233,6 @@
             _saveSessionToken(token);
             _token = token;
 
-            console.log('setting token');
-
             // Update event status
             if (isLoggedIn() && !currentStatus)
                 $(_this).trigger('mojioLogin');
@@ -332,39 +308,52 @@
             });
         }
 
-        var login = function (userOrEmail, password) {
-            if (!userOrEmail || !password)
-                $.error("Must supply an email and password");
+        var _sendLoginRequest = function (url, data, method) {
+            if (loginRequest) {
+                var r;
+                loginRequest.done(function () { r = _sendLoginRequest(url, data, method); });
 
-            var data = { password: password, minutes: settings.sessionTime };
+                var done = function (func) {
+                    if (r) r.done(func);
+                    else logiRequest.done(function () { done(func) });
+                }
 
-            loginRequest = sendRequest(getUrl("login", userOrEmail, "setuser"), data)
+                var fail = function (func) {
+                    if (r) r.fail(func);
+                    else logiRequest.done(function () { fail(func) });
+                }
+
+                return {
+                    done: done,
+                    fail: fail
+                }
+            }
+
+            loginRequest = sendRequest(url, data, method)
                 .done(function (token) {
                     setToken(token);
 
-                    if (loginRequest == this)
-                        loginRequest = null;
+                    loginRequest = null;
                 })
                 .fail(function () {
+                    loginRequest = null;
                     log('Failed to login');
                 });
 
             return loginRequest;
         }
 
+        var login = function (userOrEmail, password) {
+            if (!userOrEmail || !password)
+                $.error("Must supply an email and password");
+
+            var data = { password: password, minutes: settings.sessionTime };
+
+            return _sendLoginRequest(getUrl("login", userOrEmail, "setuser"), data);
+        }
+
         var logout = function () {
-            loginRequest = sendRequest(getUrl("login", getUserId(), "logout"))
-                .done(function (token) {
-                    setToken(token);
-
-                    if (loginRequest == this)
-                        loginRequest = null;
-                })
-                .fail(function () {
-                    log('Logout failed');
-                });
-
-            return loginRequest;
+            return _sendLoginRequest(getUrl("login", getUserId(), "logout"));
         }
 
         var getCurrentUser = function (func) {
@@ -616,9 +605,6 @@
                 if (isLoggedIn() && !loginRequest)
                     // IF already logged in, exec function
                     func();
-
-                console.log('registering');
-                console.log(loginRequest);
 
                 $(_this).bind('mojioLogin', func);
                 return public;
