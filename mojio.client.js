@@ -460,7 +460,7 @@
             }
 
             var url = getUrl(type, id, action);
-            return sendRequest(url, null, "PUT").done(_clearCached(type));
+            return sendRequest(url, null, "DELETE").done(_clearCached(type));
         }
 
         var store = function (type, id, key, value) {
