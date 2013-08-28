@@ -22,9 +22,10 @@ Initializing the Client
 
 To get started using the client, you must first create a new instance of the Mojio.Client object.  This is where you will need to pass in the Application ID and Secret Key, as well as the developer environment you are using (Sandbox, or Live) and set other configurable settings.
 
-```
+
+```javascript
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-<script src="//developer.moj.io/Scripts/mojio.client-1.0.0.js></script>
+<script src="[/path/to/js]/mojio.client.js"></script>
 <script>
     var appId = "{APPID}";
     var secretKey = "{SecretKey}";
@@ -51,8 +52,9 @@ Authenticate a Mojio User
 
 Now that you have a client that is associated with your app, you can get started making some calls.  However, many of our API calls also require an authorized user to be associated with the client sesion.  In order to authenticate a user, you must pass in the users name or email along with their password.
 
-```
+```javascript
 // ...
+// Wait till client is ready
 client.ready(function(){
     // Authenticate specific user
     client.login( "demo@example.com", "mypassword");
@@ -74,7 +76,7 @@ Fetching Data
 
 To retrieve a set of a particular Mojio entities, you can use the "get" method.  The returned results will depend on what user and application your client session is authorized as. Lists of data will be returned in a paginated form.  You are able to set the page size and request a particular page.  In order to keep response times fast, it is recommended to keep the page size low.
 
-```
+```javascript
 // ...
 // Fetch first page of 15 trips
 client.get('trips',null,null,15).done( function( results ) {
@@ -96,7 +98,7 @@ Fetch a specific Entity
 
 By passing in the ID of an entity (often a GUID), you can fetch just that single entity from the database.
 
-```
+```javascript
 // ...
 var mojioId = "123451234512345";
 	
@@ -113,7 +115,7 @@ Update an Entity
 
 If you want to update and save an entity, you need to first load the entity from the API, make your changes, and then save it back.  Typically only the owner of an entity will be authorized to save changes and not all properties of an entity will be editable (for example, for an App, only the Name and Description properties can be changed).
 
-```
+```javascript
 // ...
 var appId = new Guid("0a5123a0-7e70-12d1-a5k6-28db18c10200");
 	
@@ -133,7 +135,7 @@ Get a list of child entities
 
 If you want to fetch all the entities associated with another entity, you can call the GetBy method.  For example, if you want to fetch all the events associated with a mojio device.
 
-```
+```javascript
 // ...
 var mojioId = "123451234512345";
 	
@@ -149,7 +151,7 @@ Using the Mojio Storage
 
 With the Mojio API, you are able to store your own private data within our database as key value pairs.  These key value pairs will only be accessible by your application, and you can associate them with any Mojio entities (ex: Mojio Device, Application, User, Trip, Event, Invoice, Product).
 
-```
+```javascript
 // ...
 var userId = "0a5453a0-7e70-16d1-a2w6-28dl98c10200";  // Some user's ID
 string key = "EyeColour";	// Key to store
@@ -168,7 +170,7 @@ Using SignalR to listen for events
 
 Instead of continuously polling the API to see if any new events have come in, our API has a signalR service you can subscribe to in order to be sent new event notifications as they happen.
 
-```
+```javascript
 // ...
     // The Mojio ID you wish to listen to
     var mojioId = "123451234512345";
