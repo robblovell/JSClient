@@ -400,8 +400,8 @@
 
 
             var data = {};
-            if (page) data.page = page;
-            if (pageSize) data.pageSize = pageSize;
+            if (page) data.offset = (page-1)*pageSize;
+            if (pageSize) data.limit = pageSize;
             if (sortBy) data.sortBy = sortBy;
             if (desc) data.desc = true;
 
