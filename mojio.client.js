@@ -400,7 +400,7 @@
 
 
             var data = {};
-            if (page) data.offset = (page-1)*pageSize;
+            if (page) data.offset = (page - 1) * pageSize;
             if (pageSize) data.limit = pageSize;
             if (sortBy) data.sortBy = sortBy;
             if (desc) data.desc = true;
@@ -542,7 +542,7 @@
         function dataTableRenderDate(data, type, row) {
             var date = parseDate(data);
 
-            if (date.getFullYear() < 1970)
+            if (!date || date.getFullYear() < 1970)
                 return "Never";
 
             return date.toDateString();
