@@ -5,6 +5,32 @@
         Client: null
     };
 
+    Mojio.EventTypes = [
+        "Information",
+        "MojioOn",
+        "MojioIdle",
+        "MojioWake",
+        "IgnitionOn",
+        "IgnitionOff",
+        "TripEvent",
+        "TripEnd",
+        "TripStart",
+        "TripStatus",
+        "Tow",
+        "Accident",
+        "FenceEntered",
+        "FenceExited",
+        "Warning",
+        "MILWarning",
+        "ConnectionLost",
+        "Alert",
+        "Accident",
+        "HardAcceleration",
+        "HardRight",
+        "HardLeft",
+        "Speed"
+    ];
+
     Mojio.Client = function (options) {
         var _this = this;
         var settings;
@@ -481,6 +507,9 @@
         var subscribe = function (type, ids, groups) {
             var hub = getHub();
 
+            if (!groups)
+                groups = Mojio.EventTypes;
+
             if (hub.connection.state != 1) {
                 if (_connStatus)
                     _connStatus.done(function () { subscribe(type, ids, groups) });
@@ -497,6 +526,9 @@
 
         var unsubscribe = function (type, ids, groups) {
             var hub = getHub();
+
+            if (!groups)
+                groups = Mojio.EventTypes;
 
             if (hub.connection.state != 1) {
                 if (_connStatus)
