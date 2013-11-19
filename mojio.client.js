@@ -24,7 +24,6 @@
         "MILWarning",
         "ConnectionLost",
         "Alert",
-        "Accident",
         "HardAcceleration",
         "HardRight",
         "HardLeft",
