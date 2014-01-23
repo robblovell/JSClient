@@ -340,12 +340,12 @@
 
                 var done = function (func) {
                     if (r) r.done(func);
-                    else logiRequest.done(function () { done(func) });
+                    else loginRequest.done(function () { done(func) });
                 }
 
                 var fail = function (func) {
                     if (r) r.fail(func);
-                    else logiRequest.done(function () { fail(func) });
+                    else loginRequest.done(function () { fail(func) });
                 }
 
                 return {
@@ -375,6 +375,18 @@
             var data = { password: password, minutes: settings.sessionTime };
 
             return _sendLoginRequest(getUrl("login", userOrEmail, "setuser"), data);
+        }
+
+        var oAuthLogin = function (accessToken, expiresIn, signedRequest, userID) {
+            if (isLoggedIn())
+                return;
+
+            if (!accessToken || !expiresIn || !signedRequest || !userID)
+                $.error("Invalid OAuth login");
+
+            var data = { accessToken: accessToken, expiresIn: expiresIn, signedRequest: signedRequest, userID: userID };
+
+            return _sendLoginRequest(getUrl("login", "0", "setExternalUser"), data);
         }
 
         var logout = function () {
@@ -617,6 +629,7 @@
 
         var public = {
             login: login,
+            oAuthLogin: oAuthLogin,
             userId: getUserId,
             isLoggedIn: isLoggedIn,
             logout: logout,
