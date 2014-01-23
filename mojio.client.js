@@ -27,7 +27,8 @@
         "HardAcceleration",
         "HardRight",
         "HardLeft",
-        "Speed"
+        "Speed",
+        "Diagnostic"
     ];
 
     Mojio.Client = function (options) {
