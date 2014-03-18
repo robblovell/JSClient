@@ -1,22 +1,24 @@
 (function ($) {
     Mojio = {
-        Sandbox: "http://sandbox.developer.moj.io/v1",
-        Live: "http://developer.moj.io/v1",
+        Sandbox: "http://sandbox.api.moj.io/v1",
+        Live: "http://api.moj.io/v1",
         Client: null
     };
 
     Mojio.EventTypes = [
         "Information",
         "MojioOn",
+        "MojioOff",
         "MojioIdle",
         "MojioWake",
         "IgnitionOn",
         "IgnitionOff",
+        "LowBattery",
         "TripEvent",
-        "TripEnd",
-        "TripStart",
         "TripStatus",
-        "Tow",
+        "OffStatus",
+        "TowStart",
+        "TowStop",
         "Accident",
         "FenceEntered",
         "FenceExited",
@@ -28,7 +30,12 @@
         "HardRight",
         "HardLeft",
         "Speed",
-        "Diagnostic"
+        "Diagnostic",
+        "Park",
+        "Accelerometer",
+        "Acceleration",
+        "Deceleration",
+        "HeadingChange"
     ];
 
     Mojio.Client = function (options) {
