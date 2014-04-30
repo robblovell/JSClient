@@ -1,3 +1,5 @@
+DEPRICATED:  Use https://github.com/mojio/mojio-js 
+
 Mojio.Client
 ============
 
